@@ -20,6 +20,6 @@ penup()
 goto(-200, 0)
 pendown()
 
-koh(3)
+koh(4)
 
 exitonclick()
