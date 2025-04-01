@@ -9,11 +9,8 @@ init(W, H, 6)
 a = get_matrix()
 
 while True:
-    for x in range(W):
-        a[H - 1][x] = a[H - 2][x] = 0
-
-    for x in range(20, 100, 2):
-        a[H - 1][x] = a[H - 2][x] = a[H - 1][x + 1] = a[H - 2][x + 1] = (
+    for x in range(20, 100, 1):
+        a[H - 1][x] = a[H - 2][x] = (
             random.randint(0, 1) * max_color()
         )
 

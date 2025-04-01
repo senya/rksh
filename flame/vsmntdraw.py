@@ -1,7 +1,9 @@
+import random
 import sys
 import atexit
 import pygame
 
+pygame.init()
 
 pal = (
     [(r, 0, 0) for r in range(0, 255, 5)]
@@ -15,8 +17,8 @@ class Draw:
         self.w = w
         self.h = h
         self.scale = scale
+        self.should_exit = False
 
-        pygame.init()
         self.screen = pygame.display.set_mode((self.w * scale, self.h * scale))
         self.clock = pygame.time.Clock()
 
@@ -26,36 +28,39 @@ class Draw:
     def get_array(self):
         return [0] * self.w
 
-    def draw(self, matrix):
+    def handle_events(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                print("quit1")
-                pygame.quit()
-                sys.exit()
+                self.should_exit = True
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
-                    print("quit")
-                    pygame.quit()
-                    sys.exit()
+                    self.should_exit = True
 
-        if isinstance(matrix[0], int):
-            for x in range(0, self.w):
-                pygame.draw.rect(
-                    self.screen,
-                    pal[matrix[x]],
-                    (x * self.scale, 0, self.scale, self.scale),
-                )
-        else:
-            for y in range(0, self.h):
+    def draw(self, matrix = None):
+        self.clock.tick(20)
+
+        self.handle_events()
+        if self.should_exit:
+            sys.exit()
+
+        if matrix:
+            if isinstance(matrix[0], int):
                 for x in range(0, self.w):
                     pygame.draw.rect(
                         self.screen,
-                        pal[matrix[y][x]],
-                        (x * self.scale, y * self.scale, self.scale, self.scale),
+                        pal[matrix[x]],
+                        (x * self.scale, 0, self.scale, self.scale),
                     )
+            else:
+                for y in range(0, self.h):
+                    for x in range(0, self.w):
+                        pygame.draw.rect(
+                            self.screen,
+                            pal[matrix[y][x]],
+                            (x * self.scale, y * self.scale, self.scale, self.scale),
+                        )
 
         pygame.display.flip()
-        print(self.clock.tick(20))
 
 
 d = None
@@ -77,28 +82,36 @@ def get_array():
 
 
 def draw(matrix):
-    assert d is not None
+    global d
+
+    if d is None:
+        if isinstance(matrix[0], int):
+            w = len(matrix)
+            h = 1
+        else:
+            h = len(matrix)
+            w = len(matrix[0])
+        scale = max(1, 1024 // max(w, h))
+        d = Draw(w, h, scale)
+
     return d.draw(matrix)
+
+def рисовать(matrix):
+    draw(matrix)
 
 
 def max_color():
     return len(pal) - 1
 
 
+def случайный_цвет():
+    return random.randint(0, max_color())
+
+
 def finalize():
-    print("stop")
-    clock = pygame.time.Clock()
-    while True:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                print("quit")
-                pygame.quit()
-                sys.exit()
-            elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_ESCAPE:
-                    print("quit")
-                    pygame.quit()
-                    sys.exit()
-        clock.tick(20)
+    assert d is not None
+    while not d.should_exit:
+        d.handle_events()
+    pygame.quit()
 
 atexit.register(finalize)
